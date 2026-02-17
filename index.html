@@ -1,0 +1,640 @@
+
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plumber Quote Calculator</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Outfit', sans-serif; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+    
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      background-attachment: fixed;
+    }
+    
+    .card-base {
+      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+      border: 1px solid rgba(217, 119, 6, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .accent-gold { color: #d97706; }
+    .accent-orange { color: #ea580c; }
+    .bg-accent-gold { background: #d97706; }
+    .bg-dark { background: #1a1a2e; }
+    
+    .button-primary {
+      background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+    }
+    
+    .button-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+    }
+    
+    .input-field {
+      border: 2px solid rgba(217, 119, 6, 0.15);
+      transition: all 0.2s ease;
+    }
+    
+    .input-field:focus {
+      border-color: #d97706;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+      outline: none;
+    }
+    
+    .item-row {
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+      border: 2px solid rgba(217, 119, 6, 0.15);
+      transition: all 0.2s ease;
+    }
+    
+    .item-row:hover {
+      border-color: #d97706;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+    }
+    
+    .summary-card {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #d97706;
+      box-shadow: 0 8px 30px rgba(217, 119, 6, 0.2);
+    }
+    
+    .profit-highlight {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+      border-left: 4px solid #22c55e;
+    }
+    
+    .invoice-view { display: none; }
+    .invoice-view.active { display: block; }
+    .quote-view.hidden { display: none; }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d97706; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #b45309; }
+    
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body class="h-full overflow-hidden text-gray-900">
+  <div id="app-container" class="h-full overflow-auto">
+    
+    <!-- Quote Builder View -->
+    <div id="quote-view" class="quote-view max-w-5xl mx-auto p-6">
+      
+      <!-- Hero Header -->
+      <header class="mb-8 pt-4">
+        <div class="flex items-end gap-4 mb-3">
+          <div class="relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl blur-lg opacity-50"></div>
+            <div class="relative w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <h1 id="header-business-name" class="text-4xl font-bold text-white mb-1">Quote Calculator</h1>
+            <p class="text-orange-300 text-lg font-medium">Build pro quotes. Keep your margins sharp.</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- Customer Info -->
+      <section class="card-base rounded-2xl p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
+          <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </div>
+          Customer Details
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="customer-name" class="block text-sm font-semibold text-gray-700 mb-2">Customer Name</label>
+            <input type="text" id="customer-name" placeholder="John Smith" class="input-field w-full px-4 py-3 border rounded-lg bg-white focus:bg-orange-50">
+          </div>
+          <div>
+            <label for="customer-address" class="block text-sm font-semibold text-gray-700 mb-2">Address</label>
+            <input type="text" id="customer-address" placeholder="123 Main St, City" class="input-field w-full px-4 py-3 border rounded-lg bg-white focus:bg-orange-50">
+          </div>
+          <div>
+            <label for="customer-phone" class="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+            <input type="text" id="customer-phone" placeholder="(555) 000-0000" class="input-field w-full px-4 py-3 border rounded-lg bg-white focus:bg-orange-50">
+          </div>
+          <div>
+            <label for="job-date" class="block text-sm font-semibold text-gray-700 mb-2">Quote Date</label>
+            <input type="date" id="job-date" class="input-field w-full px-4 py-3 border rounded-lg bg-white focus:bg-orange-50">
+          </div>
+        </div>
+      </section>
+
+      <!-- Line Items -->
+      <section class="card-base rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            Parts & Materials
+          </h2>
+          <button id="add-item-btn" class="button-primary flex items-center gap-2 px-5 py-2.5 text-white rounded-lg text-sm font-bold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Item
+          </button>
+        </div>
+        
+        <div id="items-container" class="space-y-3">
+          <!-- Items will be added here -->
+        </div>
+        
+        <div id="no-items-msg" class="text-center py-12 text-gray-400">
+          <svg class="w-16 h-16 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <p class="text-lg font-semibold mb-1">No items yet</p>
+          <p class="text-sm">Click "Add Item" to start building</p>
+        </div>
+      </section>
+
+      <!-- Labour -->
+      <section class="card-base rounded-2xl p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
+          <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          Labour
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label for="hourly-rate" class="block text-sm font-semibold text-gray-700 mb-2">Hourly Rate (£)</label>
+            <input type="number" id="hourly-rate" value="85" min="0" step="5" class="input-field w-full px-4 py-3 border rounded-lg bg-white focus:bg-orange-50">
+          </div>
+          <div>
+            <label for="hours-estimate" class="block text-sm font-semibold text-gray-700 mb-2">Estimated Hours</label>
+            <input type="number" id="hours-estimate" value="2" min="0" step="0.5" class="input-field w-full px-4 py-3 border rounded-lg bg-white focus:bg-orange-50">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Labour Total</label>
+            <div id="labour-total-display" class="w-full px-4 py-3 bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-lg font-bold text-orange-700 text-lg">£170.00</div>
+          </div>
+        </div>
+        <div>
+          <label for="labour-notes" class="block text-sm font-semibold text-gray-700 mb-2">Labour Description</label>
+          <textarea id="labour-notes" rows="2" placeholder="e.g., Installation of new fixtures, repair work, callout fee included..." class="input-field w-full px-4 py-3 border rounded-lg bg-white focus:bg-orange-50 resize-none"></textarea>
+        </div>
+      </section>
+
+      <!-- Summary -->
+      <section class="summary-card rounded-2xl p-6 mb-6 text-white">
+        <h2 class="text-xl font-bold mb-5 flex items-center gap-3">
+          <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+          </svg>
+          Quote Summary
+        </h2>
+        <div class="space-y-2.5 text-sm">
+          <div class="flex justify-between py-2.5 border-b border-orange-500/30 pb-2.5">
+            <span class="text-orange-200">Parts & Materials (Cost)</span>
+            <span id="summary-parts-cost" class="font-bold">£0.00</span>
+          </div>
+          <div class="flex justify-between py-2.5 border-b border-orange-500/30 pb-2.5">
+            <span class="text-orange-200">Markup Profit</span>
+            <span id="summary-markup" class="font-bold text-emerald-300">+£0.00</span>
+          </div>
+          <div class="flex justify-between py-2.5 border-b border-orange-500/30 pb-2.5">
+            <span class="text-orange-200">Parts & Materials (Customer Price)</span>
+            <span id="summary-parts-price" class="font-bold">£0.00</span>
+          </div>
+          <div class="flex justify-between py-2.5 border-b border-orange-500/30 pb-2.5">
+            <span class="text-orange-200">Labour</span>
+            <span id="summary-labour" class="font-bold">£170.00</span>
+          </div>
+          <div class="flex justify-between py-4 text-lg border-t-2 border-orange-500/50 pt-3">
+            <span class="font-bold">Total Quote</span>
+            <span id="summary-total" class="font-black text-orange-300 text-xl">£170.00</span>
+          </div>
+          <div class="profit-highlight rounded-lg px-4 py-3 mt-4">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-emerald-600">Your Profit</span>
+              <span id="summary-profit" class="font-black text-emerald-600 text-xl">£0.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Generate Invoice Button -->
+      <button id="generate-invoice-btn" class="button-primary w-full py-4 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 mb-6">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Generate Customer Invoice
+      </button>
+    </div>
+
+    <!-- Invoice View -->
+    <div id="invoice-view" class="invoice-view max-w-3xl mx-auto p-6">
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border-t-4 border-orange-600">
+        
+        <!-- Invoice Header -->
+        <div class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white p-10">
+          <div class="flex justify-between items-start">
+            <div>
+              <h1 id="invoice-business-name" class="text-3xl font-bold mb-2">Your Plumbing Co.</h1>
+              <p id="invoice-business-phone" class="text-gray-300 text-sm mb-1"></p>
+              <p id="invoice-business-email" class="text-gray-300 text-sm"></p>
+            </div>
+            <div class="text-right">
+              <div class="text-5xl font-black text-orange-500 mb-3">QUOTE</div>
+              <div class="text-gray-300 text-sm space-y-1">
+                <p>Date: <span id="invoice-date" class="font-semibold"></span></p>
+                <p>Quote #: <span id="invoice-number" class="font-semibold text-orange-400"></span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="p-8 border-b-2 border-gray-100">
+          <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest mb-3">Quote For</h3>
+          <p id="invoice-customer-name" class="font-bold text-xl text-gray-900 mb-1"></p>
+          <p id="invoice-customer-address" class="text-gray-600"></p>
+          <p id="invoice-customer-phone" class="text-gray-600"></p>
+        </div>
+
+        <!-- Line Items Table -->
+        <div class="p-8">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b-2 border-orange-200 bg-orange-50">
+                <th class="text-left py-4 px-4 text-xs font-black text-gray-700 uppercase tracking-wider">Description</th>
+                <th class="text-center py-4 px-4 text-xs font-black text-gray-700 uppercase tracking-wider">Qty</th>
+                <th class="text-right py-4 px-4 text-xs font-black text-gray-700 uppercase tracking-wider">Unit Price</th>
+                <th class="text-right py-4 px-4 text-xs font-black text-gray-700 uppercase tracking-wider">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="invoice-items-body">
+              <!-- Invoice items will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="p-8 bg-gradient-to-br from-gray-50 to-gray-100">
+          <div class="max-w-xs ml-auto space-y-3">
+            <div class="flex justify-between py-2.5 text-gray-700">
+              <span>Parts & Materials</span>
+              <span id="invoice-subtotal" class="font-bold">£0.00</span>
+            </div>
+            <div class="flex justify-between py-2.5 text-gray-700">
+              <span>Labour</span>
+              <span id="invoice-labour" class="font-bold">£0.00</span>
+            </div>
+            <div class="flex justify-between py-4 border-t-2 border-orange-300 text-xl bg-gradient-to-r from-orange-50 to-orange-100 -m-2 p-4 rounded-lg">
+              <span class="font-black text-gray-900">Total</span>
+              <span id="invoice-total" class="font-black text-orange-600">£0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Labour Notes -->
+        <div id="invoice-labour-notes-section" class="p-8 border-t-2 border-gray-100 bg-blue-50" style="display: none;">
+          <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest mb-3">Work Description</h3>
+          <p id="invoice-labour-notes" class="text-gray-700 leading-relaxed"></p>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-8 bg-gray-900 text-center">
+          <p class="text-white font-bold mb-2">Thank you for your business!</p>
+          <p class="text-gray-400 text-sm">This quote is valid for 30 days from the date of issue.</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-4 mt-6 no-print">
+        <button id="back-to-quote-btn" class="flex-1 py-3.5 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Back to Quote
+        </button>
+        <button id="print-invoice-btn" class="button-primary flex-1 py-3.5 text-white rounded-xl font-bold flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Print / Save PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let items = [];
+    let itemIdCounter = 0;
+
+    // Default config
+    const defaultConfig = {
+      business_name: 'Your Plumbing Co.',
+      business_phone: '(555) 123-4567',
+      business_email: 'info@yourplumbing.com'
+    };
+
+    // Format currency
+    function formatCurrency(amount) {
+      return '£' + amount.toFixed(2);
+    }
+
+    // Create item row HTML
+    function createItemRow(item) {
+      const customerPrice = item.cost * (1 + item.markup / 100) * item.qty;
+      
+      return `
+        <div class="item-row rounded-xl p-5 border transition-all" data-id="${item.id}">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+            <div class="md:col-span-4">
+              <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Description</label>
+              <input type="text" value="${item.description}" placeholder="e.g., Copper pipe 15mm" 
+                class="input-field item-description w-full px-4 py-2.5 border rounded-lg text-sm bg-white">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Cost (£)</label>
+              <input type="number" value="${item.cost}" min="0" step="0.01" 
+                class="input-field item-cost w-full px-4 py-2.5 border rounded-lg text-sm bg-white">
+            </div>
+            <div class="md:col-span-1">
+              <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Qty</label>
+              <input type="number" value="${item.qty}" min="1" step="1" 
+                class="input-field item-qty w-full px-4 py-2.5 border rounded-lg text-sm bg-white">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Markup %</label>
+              <input type="number" value="${item.markup}" min="0" step="5" 
+                class="input-field item-markup w-full px-4 py-2.5 border rounded-lg text-sm bg-white">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Customer Price</label>
+              <div class="item-price px-4 py-2.5 bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-lg text-sm font-bold text-orange-700">${formatCurrency(customerPrice)}</div>
+            </div>
+            <div class="md:col-span-1 flex items-end">
+              <button class="delete-item-btn w-full py-2.5 text-red-600 hover:bg-red-100 rounded-lg transition-all font-bold" title="Remove item">
+                <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="mt-4">
+            <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Notes (shown on invoice)</label>
+            <input type="text" value="${item.notes}" placeholder="e.g., Brand, size, warranty info..." 
+              class="input-field item-notes w-full px-4 py-2.5 border rounded-lg text-sm bg-white">
+          </div>
+        </div>
+      `;
+    }
+
+    // Add new item
+    function addItem() {
+      const newItem = {
+        id: ++itemIdCounter,
+        description: '',
+        cost: 0,
+        qty: 1,
+        markup: 25,
+        notes: ''
+      };
+      items.push(newItem);
+      renderItems();
+      updateSummary();
+    }
+
+    // Delete item
+    function deleteItem(id) {
+      items = items.filter(item => item.id !== id);
+      renderItems();
+      updateSummary();
+    }
+
+    // Update item from inputs
+    function updateItemFromInputs(row, item) {
+      item.description = row.querySelector('.item-description').value;
+      item.cost = parseFloat(row.querySelector('.item-cost').value) || 0;
+      item.qty = parseInt(row.querySelector('.item-qty').value) || 1;
+      item.markup = parseFloat(row.querySelector('.item-markup').value) || 0;
+      item.notes = row.querySelector('.item-notes').value;
+      
+      const customerPrice = item.cost * (1 + item.markup / 100) * item.qty;
+      row.querySelector('.item-price').textContent = formatCurrency(customerPrice);
+      
+      updateSummary();
+    }
+
+    // Render items list
+    function renderItems() {
+      const container = document.getElementById('items-container');
+      const noItemsMsg = document.getElementById('no-items-msg');
+      
+      if (items.length === 0) {
+        container.innerHTML = '';
+        noItemsMsg.style.display = 'block';
+        return;
+      }
+      
+      noItemsMsg.style.display = 'none';
+      container.innerHTML = items.map(createItemRow).join('');
+      
+      // Add event listeners
+      container.querySelectorAll('.item-row').forEach(row => {
+        const id = parseInt(row.dataset.id);
+        const item = items.find(i => i.id === id);
+        
+        row.querySelectorAll('input').forEach(input => {
+          input.addEventListener('input', () => updateItemFromInputs(row, item));
+        });
+        
+        row.querySelector('.delete-item-btn').addEventListener('click', () => deleteItem(id));
+      });
+    }
+
+    // Update summary calculations
+    function updateSummary() {
+      let totalCost = 0;
+      let totalCustomerPrice = 0;
+      
+      items.forEach(item => {
+        const itemCost = item.cost * item.qty;
+        const itemPrice = item.cost * (1 + item.markup / 100) * item.qty;
+        totalCost += itemCost;
+        totalCustomerPrice += itemPrice;
+      });
+      
+      const markup = totalCustomerPrice - totalCost;
+      
+      const hourlyRate = parseFloat(document.getElementById('hourly-rate').value) || 0;
+      const hours = parseFloat(document.getElementById('hours-estimate').value) || 0;
+      const labourTotal = hourlyRate * hours;
+      
+      document.getElementById('labour-total-display').textContent = formatCurrency(labourTotal);
+      
+      const grandTotal = totalCustomerPrice + labourTotal;
+      const profit = markup;
+      
+      document.getElementById('summary-parts-cost').textContent = formatCurrency(totalCost);
+      document.getElementById('summary-markup').textContent = '+' + formatCurrency(markup);
+      document.getElementById('summary-parts-price').textContent = formatCurrency(totalCustomerPrice);
+      document.getElementById('summary-labour').textContent = formatCurrency(labourTotal);
+      document.getElementById('summary-total').textContent = formatCurrency(grandTotal);
+      document.getElementById('summary-profit').textContent = formatCurrency(profit);
+    }
+
+    // Generate invoice
+    function generateInvoice() {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      
+      // Set business info
+      document.getElementById('invoice-business-name').textContent = config.business_name || defaultConfig.business_name;
+      document.getElementById('invoice-business-phone').textContent = config.business_phone || defaultConfig.business_phone;
+      document.getElementById('invoice-business-email').textContent = config.business_email || defaultConfig.business_email;
+      
+      // Set customer info
+      document.getElementById('invoice-customer-name').textContent = document.getElementById('customer-name').value || 'Customer';
+      document.getElementById('invoice-customer-address').textContent = document.getElementById('customer-address').value || '';
+      document.getElementById('invoice-customer-phone').textContent = document.getElementById('customer-phone').value || '';
+      
+      // Set date and quote number
+      const dateInput = document.getElementById('job-date').value;
+      const formattedDate = dateInput ? new Date(dateInput).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      document.getElementById('invoice-date').textContent = formattedDate;
+      document.getElementById('invoice-number').textContent = 'Q-' + Date.now().toString().slice(-6);
+      
+      // Build items table
+      const tbody = document.getElementById('invoice-items-body');
+      let itemsHtml = '';
+      let partsSubtotal = 0;
+      
+      items.forEach(item => {
+        const unitPrice = item.cost * (1 + item.markup / 100);
+        const lineTotal = unitPrice * item.qty;
+        partsSubtotal += lineTotal;
+        
+        const description = item.description || 'Item';
+        const notes = item.notes ? `<br><span class="text-gray-500 text-sm">${item.notes}</span>` : '';
+        
+        itemsHtml += `
+          <tr class="border-b border-gray-100">
+            <td class="py-4 px-4 text-gray-800">${description}${notes}</td>
+            <td class="py-4 px-4 text-center text-gray-600 font-medium">${item.qty}</td>
+            <td class="py-4 px-4 text-right text-gray-600 font-medium">${formatCurrency(unitPrice)}</td>
+            <td class="py-4 px-4 text-right font-bold text-gray-900">${formatCurrency(lineTotal)}</td>
+          </tr>
+        `;
+      });
+      
+      tbody.innerHTML = itemsHtml;
+      
+      // Calculate totals
+      const hourlyRate = parseFloat(document.getElementById('hourly-rate').value) || 0;
+      const hours = parseFloat(document.getElementById('hours-estimate').value) || 0;
+      const labourTotal = hourlyRate * hours;
+      const grandTotal = partsSubtotal + labourTotal;
+      
+      document.getElementById('invoice-subtotal').textContent = formatCurrency(partsSubtotal);
+      document.getElementById('invoice-labour').textContent = formatCurrency(labourTotal);
+      document.getElementById('invoice-total').textContent = formatCurrency(grandTotal);
+      
+      // Labour notes
+      const labourNotes = document.getElementById('labour-notes').value;
+      const notesSection = document.getElementById('invoice-labour-notes-section');
+      if (labourNotes.trim()) {
+        document.getElementById('invoice-labour-notes').textContent = labourNotes;
+        notesSection.style.display = 'block';
+      } else {
+        notesSection.style.display = 'none';
+      }
+      
+      // Show invoice view
+      document.getElementById('quote-view').classList.add('hidden');
+      document.getElementById('invoice-view').classList.add('active');
+    }
+
+    // Back to quote
+    function backToQuote() {
+      document.getElementById('invoice-view').classList.remove('active');
+      document.getElementById('quote-view').classList.remove('hidden');
+    }
+
+    // Print invoice
+    function printInvoice() {
+      window.print();
+    }
+
+    // Apply config to UI
+    function applyConfig(config) {
+      const businessName = config.business_name || defaultConfig.business_name;
+      document.getElementById('header-business-name').textContent = businessName;
+    }
+
+    // Initialize
+    function init() {
+      // Set today's date
+      document.getElementById('job-date').valueAsDate = new Date();
+      
+      // Event listeners
+      document.getElementById('add-item-btn').addEventListener('click', addItem);
+      document.getElementById('hourly-rate').addEventListener('input', updateSummary);
+      document.getElementById('hours-estimate').addEventListener('input', updateSummary);
+      document.getElementById('generate-invoice-btn').addEventListener('click', generateInvoice);
+      document.getElementById('back-to-quote-btn').addEventListener('click', backToQuote);
+      document.getElementById('print-invoice-btn').addEventListener('click', printInvoice);
+      
+      // Initial summary update
+      updateSummary();
+      
+      // Initialize Element SDK
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => {
+            applyConfig(config);
+          },
+          mapToCapabilities: (config) => ({
+            recolorables: [],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['business_name', config.business_name || defaultConfig.business_name],
+            ['business_phone', config.business_phone || defaultConfig.business_phone],
+            ['business_email', config.business_email || defaultConfig.business_email]
+          ])
+        });
+        
+        applyConfig(window.elementSdk.config);
+      }
+    }
+
+    init();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cf6ce574746f650',t:'MTc3MTM0NzI2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
